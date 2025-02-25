@@ -34,17 +34,22 @@ from bs4 import BeautifulSoup
 import json
 import requests
 import asyncio
+import logging
 from ..utils.publish_to_topic import produce
 from ..utils.constants import LEAD_INGESTION_AGENT_OUTPUT_TOPIC
 
 # Load environment variables from .env file
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 model = ChatAnthropic(model='claude-3-5-haiku-20241022', temperature=0.7)
 
-def remove_empty_lines(text):
-    return "\n".join([line for line in text.split("\n") if line.strip()])
+def remove_empty_lines(text: str) -> str:
+    """Removes empty lines from the given text."""
+    return "\n".join(line for line in text.splitlines() if line.strip())
 
 @tool
 def get_company_website_information(company_website_url):
@@ -68,8 +73,7 @@ def get_company_website_information(company_website_url):
     Raises:
         requests.RequestException: If an error occurs during the HTTP request.
     """
-    print("get_company_website_information")
-    print(company_website_url)
+    logger.info(f"Fetching company website information for: {company_website_url}")
 
     try:
         headers = {
@@ -87,10 +91,11 @@ def get_company_website_information(company_website_url):
 
             return response
         else:
-            print(f"Failed to fetch the website. Status code: {response.status_code}")
+            logger.info(f"Failed to fetch the website. Status code: {response.status_code}")
+        
             return None
     except requests.RequestException as e:
-        print(f"Error fetching website: {e}")
+        logger.info(f"Error fetching website: {e}")
         return None
 
 @tool
@@ -119,8 +124,7 @@ def get_salesforce_data(lead_details):
           plausible Salesforce-like data using an AI model.
     """
 
-    print('get_salesforce_data')
-    print(lead_details)
+    logger.info(f"Fetching Salesforce data for: {lead_details}")
 
     prompt = f"""
       Take the lead details and generate realistic Salesforce data to represent the contact,
@@ -134,7 +138,7 @@ def get_salesforce_data(lead_details):
 
     response = model.invoke([{ "role": "user", "content": prompt }])
 
-    print(response)
+    logger.info(response)
 
     return response
 
@@ -164,8 +168,7 @@ def get_enriched_lead_data(lead_details):
         - The output is AI-generated and structured based on a predefined example.
     """
 
-    print('get_enriched_lead_data')
-    print(lead_details)
+    logger.info(f"Fetching Clearbit data for: {lead_details}")
 
     clear_bit_sample_payload = {
         "person": {
@@ -261,7 +264,7 @@ def get_enriched_lead_data(lead_details):
 
     response = model.invoke([{ "role": "user", "content": prompt }])
 
-    print(response)
+    logger.info(response)
 
     return response
 
@@ -325,12 +328,12 @@ async def start_agent_flow(lead_details):
       Additional Insights - Any relevant information that can aid in outreach planning or lead prioritization.""")]}
     
     response = await graph.ainvoke(inputs)
-    # print_stream(response)
 
     last_message_content = response["messages"][-1]
     content = last_message_content.pretty_repr()
 
-    print(content)
+    logger.info(f"Response from agent: {content}")
+
     produce(LEAD_INGESTION_AGENT_OUTPUT_TOPIC, { "content": content, "lead_data": lead_details })
 
 @router.api_route("/lead-ingestion-agent", methods=["GET", "POST"])
