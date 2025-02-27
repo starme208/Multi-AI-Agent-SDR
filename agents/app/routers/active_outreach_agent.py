@@ -29,7 +29,7 @@ import re
 import asyncio
 from ..utils.agent_tools import get_company_website_information, get_salesforce_data, get_enriched_lead_data, get_recent_linkedin_posts
 from ..utils.publish_to_topic import produce
-from ..utils.constants import ACTIVE_OUTREACH_AGENT_OUTPUT_TOPIC
+from ..utils.constants import EMAIL_CAMPAIGNS_TOPIC, PRODUCT_DESCRIPTION
 
 # Load environment variables from .env file
 load_dotenv()
@@ -59,6 +59,7 @@ graph = create_react_agent(model, tools=tools, state_modifier=SYSTEM_PROMPT)
 
 async def start_agent_flow(lead_details, lead_evaluation):
     example_output = {
+        "to": "Lead's Email Address",
         "subject": "Example Subject Line",
         "body": "Example Email Body"
     }
@@ -84,14 +85,7 @@ async def start_agent_flow(lead_details, lead_evaluation):
       - Lead Form Responses: {lead_details}
       - Lead Evaluation: {lead_evaluation}
 
-      Product Overview  - StratusAI Warehouse:
-      StratusAI Warehouse is a next-generation AI-powered data warehouse, designed for data-driven enterprises. Key capabilities include:
-
-      Real-time analytics & AI readiness - Built-in support for streaming data ingestion, vector search, and ML model hosting.
-      Seamless data sharing - Securely share and monetize data across organizations via our Data Exchange.
-      Multi-cloud & hybrid flexibility - Deploy across AWS, Azure, and GCP with intelligent cost optimization.
-      Built-in compliance & governance - Native support for GDPR, HIPAA, and SOC 2 without performance trade-offs.
-      AI-driven query optimization - Our engine auto-tunes performance and cost based on query patterns.
+      {PRODUCT_DESCRIPTION}
       
       Expected Output - Personalized Prospect Email:
       The email should be concise, engaging, and structured to drive a response, containing:
@@ -120,19 +114,18 @@ async def start_agent_flow(lead_details, lead_evaluation):
 
     if json_match:
         json_str = json_match.group()
-        email_details = json.loads(json_str)
+        logger.info(json_str)
 
-        subject = email_details.get("subject", "")
-        body = email_details.get("body", "")
-        
-        logger.info(subject)
-        logger.info(body)
+        escaped_data = json.dumps(json_str)
+        email_details = json.loads(escaped_data)
 
-        produce(ACTIVE_OUTREACH_AGENT_OUTPUT_TOPIC, { "subject": subject, "body": body, "lead_data": lead_details })
+        campaign_type = lead_evaluation.get("next_step", None)
+
+        produce(EMAIL_CAMPAIGNS_TOPIC, { "emails": [ email_details ], "campaign_type": campaign_type})
     else:
         logger.info("No JSON found in the string.")
 
-@router.api_route("/activate-outreach-agent", methods=["GET", "POST"])
+@router.api_route("/active-outreach-agent", methods=["GET", "POST"])
 async def active_outreach_agent(request: Request):
     logger.info("active-outreach-agent")
     if request.method == "POST":

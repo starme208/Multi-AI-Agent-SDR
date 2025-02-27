@@ -33,7 +33,7 @@ import asyncio
 import logging
 from ..utils.agent_tools import get_company_website_information, get_salesforce_data, get_enriched_lead_data
 from ..utils.publish_to_topic import produce
-from ..utils.constants import LEAD_INGESTION_AGENT_OUTPUT_TOPIC
+from ..utils.constants import LEAD_INGESTION_AGENT_OUTPUT_TOPIC, PRODUCT_DESCRIPTION
 
 # Load environment variables from .env file
 load_dotenv()
@@ -81,19 +81,13 @@ async def start_agent_flow(lead_details):
           - Company Website Lookup Tool - Fetches key details from the company's official website.
           - Salesforce Data Access - Retrieves CRM data about the lead's past interactions, status, and engagement history.
           - Clearbit Enrichment API - Provides firmographic and contact-level data, including company size, funding, tech stack, and key decision-makers.
-        - Filter out weak leads, ensuring minimal time is spent on companies unlikely to be a fit for StratusDB's offering.
+        - Filter out weak leads or where the lead data doesn't look like a fit, ensuring minimal time is spent on companies unlikely to be a fit for StratusDB's offering.
 
       Lead Form Responses:
         {lead_details}
 
-      Product Overview - StratusAI Warehouse:
-      StratusAI Warehouse is a next-generation AI-powered data warehouse designed for data-driven enterprises. Key capabilities include:
-
-      Real-time analytics & AI readiness - Built-in support for streaming data ingestion, vector search, and ML model hosting.
-      Seamless data sharing - Securely share and monetize data across organizations via our Data Exchange.
-      Multi-cloud & hybrid flexibility - Deploy across AWS, Azure, and GCP with intelligent cost optimization.
-      Built-in compliance & governance - Native support for GDPR, HIPAA, and SOC 2 without performance trade-offs.
-      AI-driven query optimization - Our engine auto-tunes performance and cost based on query patterns.
+      {PRODUCT_DESCRIPTION}
+        
       Expected Output - Research Report:
       The research report should be concise and actionable, containing:
 
@@ -121,24 +115,37 @@ async def lead_ingestion_agent(request: Request):
         print(data)
 
         for item in data:
-            oid_raw = item.get('fullDocument', {}).get('_id', '{}')
-            
-            # TODO: need to pull out lead data and start agent
+            print(item)
+            full_document = item.get("fullDocument", {})
+
+            print(full_document)
+
+            lead_details = {
+              "name": full_document.get("name"),
+              "email": full_document.get("email"),
+              "company_name": full_document.get("company"),
+              "company_website": full_document.get("companyWebsite"),
+              "lead_source": full_document.get("leadSource"),
+              "job_title": full_document.get("jobTitle"),
+              "project_description": full_document.get("projectDescription"),
+            }
+          
+            asyncio.create_task(start_agent_flow(lead_details))
 
         return Response(content="Lead Ingestion Agent Started", media_type="text/plain", status_code=200)
     else: # For local testing
-        data = {
-          "lead": {
-            "name": "Jane Doe",
-            "email": "jane.doe@acmeanalytics.com",
-            "company_name": "Tiger Analytics",
-            "company_website": "https://www.tigeranalytics.com/",
-            "lead_source": "Webinar - AI for Real-Time Data",
-            "job_title": "Director of Data Engineering",
-            "project_description": "Looking for a scalable data warehouse solution to support real-time analytics and AI-driven insights. Currently using Snowflake but exploring alternatives that better integrate with streaming data."
-          }
+        full_document = {'createdAt': 1740674891490, 'leadSource': 'Demo Request', 'jobTitle': 'Account Exec', 'name': 'Sean Falconer', 'projectDescription': 'Test', 'company': 'Target', '_id': '{"$oid": "67c0974cef1e1dad39a75168"}', 'companyWebsite': 'https://www.target.com', 'email': 'falconer.sean@gmail.com'}
+
+        lead_details = {
+          "name": full_document.get("name"),
+          "email": full_document.get("email"),
+          "company_name": full_document.get("company"),
+          "company_website": full_document.get("companyWebsite"),
+          "lead_source": full_document.get("leadSource"),
+          "job_title": full_document.get("jobTitle"),
+          "project_description": full_document.get("projectDescription"),
         }
 
-        asyncio.create_task(start_agent_flow(data))
+        asyncio.create_task(start_agent_flow(lead_details))
 
         return Response(content="Lead Ingestion Agent Started", media_type="text/plain", status_code=200)

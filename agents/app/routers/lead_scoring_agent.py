@@ -63,6 +63,7 @@ async def start_agent_flow(lead_details, content):
 
       - Consider factors such as industry relevance, company size, StratusAI Warehouse use case potential, and buying readiness.
       - Evaluate the wording and length of the response—short answers are a yellow flag.
+      - Take into account he role of the lead. Only prioritize leads that fit our core buyer persona. Nurture low quality.
       - Be pessimistic: focus high scores on leads with clear potential to close.
       - Smaller companies typically have lower budgets.
       - Avoid spending too much time on leads that are not a good fit.
@@ -95,6 +96,8 @@ async def start_agent_flow(lead_details, content):
     if json_match:
         json_str = json_match.group()  # Extract JSON part
         lead_evaluation = json.loads(json_str)  # Convert to Python dictionary
+
+        print(lead_evaluation)
         
         produce(LEAD_SCORING_AGENT_OUTPUT_TOPIC, { "lead_evaluation": lead_evaluation, "lead_data": lead_details })
     else:
@@ -102,29 +105,42 @@ async def start_agent_flow(lead_details, content):
 
 @router.api_route("/lead-scoring-agent", methods=["GET", "POST"])
 async def lead_scoring_agent(request: Request):
-    logger.info("lead-scoring-agent")
+    print("lead-scoring-agent")
     if request.method == "POST":
         data = await request.json()
 
-        logger.info(data)
+        print(data)
 
         for item in data:
-            logger.info(item)
+            print(item)
 
-            lead_details = item.get('lead_data', {}).get('lead', {})
+            lead_details = item.get('lead_data', {})
             content = item.get('content', "")
 
-            logger.info(lead_details)
-            logger.info(content)
+            print(lead_details)
+            print(content)
 
             asyncio.create_task(start_agent_flow(lead_details, content))
 
         return Response(content="Lead Scoring Agent Started", media_type="text/plain", status_code=200)
     else: # For local testing
-        item = {'lead_data': {'lead': {'project_description': '111 Looking for a scalable data warehouse solution to support real-time analytics and AI-driven insights. Currently using Snowflake but exploring alternatives that better integrate with streaming data.', 'company_name': 'Tiger Analytics', 'company_website': 'https://www.tigeranalytics.com/', 'lead_source': 'Webinar - AI for Real-Time Data', 'name': 'Jane Doe', 'job_title': 'Director of Data Engineering', 'email': 'jane.doe@acmeanalytics.com'}}, 'content': '================================== Ai Message ==================================\n\nComprehensive Research Report for Tiger Analytics Lead\n\n1. Industry Overview:\n- Industry: Data & Analytics, Enterprise Software\n- Market Trends:\n  - Increasing demand for real-time analytics and AI-driven insights\n  - Growing emphasis on multi-cloud and flexible data infrastructure\n  - Rising importance of AI/ML integration in data platforms\n\n2. Company Insights:\n- Company Size: 350 employees\n- Annual Revenue: $25M-$50M\n- Funding: $45M (Series A in 2022)\n- Key Technologies: Snowflake, AWS, Apache Spark, Databricks, Tableau, BigQuery\n- Strategic Focus:\n  - AI and analytics consulting\n  - Multi-industry solutions (CPG, Retail, BFS, Insurance, etc.)\n  - Strong partnerships with cloud and data platform providers\n\n3. Potential Use Cases for StratusAI Warehouse:\n- Real-time Data Ingestion: Support for streaming data crucial for their analytics services\n- Multi-Cloud Deployment: Aligns with their existing multi-cloud technology stack\n- AI/ML Integration: Native support for ML model hosting matches their AI engineering capabilities\n- Data Sharing: Potential for monetizing client data through secure data exchange\n- Compliance: Built-in governance features for various industry regulations\n\n4. Lead Quality Assessment:\n- Engagement Signals: \n  - Attended AI-focused webinar\n  - Actively exploring data warehouse alternatives\n  - Current pain point: scalability of existing Snowflake setup\n- Fit Score: High\n  - Director-level technical decision-maker\n  - Company focused on data and AI solutions\n  - Demonstrated interest in advanced data infrastructure\n\n5. Additional Insights:\n- Current Tech Stack Compatibility: StratusAI Warehouse can seamlessly integrate with existing tools\n- Growth Potential: Company experiencing 20% YoY growth, indicating investment in technology\n- Key Decision-Makers to Engage:\n  - Michael Rodriguez (CEO)\n  - Sarah Chen (CTO)\n  - Jane Doe (Primary Contact)\n\n6. Recommended Outreach Strategy:\n- Personalized demo highlighting real-time analytics and AI integration\n- Case studies showcasing multi-cloud flexibility\n- Technical deep dive on query optimization and cost management\n- Emphasize seamless migration from Snowflake\n\n7. Potential Challenges:\n- Existing strong relationships with cloud providers\n- Potential resistance to changing current data infrastructure\n- Need to demonstrate clear ROI and performance improvements\n\nRecommendation: Priority Lead - Pursue with tailored, technical engagement strategy focusing on AI capabilities and multi-cloud flexibility.'}
+        item = {
+            "content": "================================== Ai Message ==================================\n\nResearch Report for Target Lead\n\n1. Industry Overview:\n- Retail Industry Trends:\n  - Increasing digital transformation and e-commerce integration\n  - Growing emphasis on data-driven decision making\n  - Rising importance of personalized customer experiences\n  - AI and machine learning adoption for inventory management, customer insights, and operational efficiency\n\n2. Company Insights:\n- Company: Target Corporation\n- Industry: Retail (Multi-channel Retail and Department Store)\n- Key Characteristics:\n  - Fortune 500 company\n  - Major national retailer in the United States\n  - Operates over 1,900 stores and a robust e-commerce platform\n  - Known for innovative retail strategies and digital transformation\n\n3. Potential Use Cases for StratusAI Warehouse:\na) Real-time Analytics:\n- Inventory management optimization\n- Customer behavior analysis\n- Dynamic pricing strategies\n- Supply chain intelligence\n\nb) Data Management Challenges:\n- Managing massive volumes of transactional and customer data\n- Need for cross-platform data integration (in-store and online channels)\n- Requirement for fast, scalable data processing\n\nc) AI-Driven Opportunities:\n- Predictive demand forecasting\n- Personalized marketing recommendations\n- Fraud detection and prevention\n- Customer segmentation and targeting\n\n4. Lead Quality Assessment:\n- Positive Signals:\n  - Lead from a large enterprise company\n  - Came through a demo request\n  - Account Executive role suggests potential decision-making influence\n\n- Potential Concerns:\n  - Limited project description (\"Test\")\n  - Personal email used instead of corporate email\n  - Minimal initial context provided\n\n5. Additional Insights:\n- Target is known for technological innovation in retail\n- Likely has complex data infrastructure requiring advanced data management solutions\n- Potential interest in:\n  - Multi-cloud deployment\n  - Real-time analytics capabilities\n  - AI-driven optimization\n  - Compliance and governance features\n\nRecommended Next Steps:\n1. Conduct a more in-depth discovery call to understand:\n   - Current data infrastructure challenges\n   - Specific analytics and AI initiatives\n   - Pain points in existing data management processes\n\n2. Prepare a tailored presentation highlighting:\n   - StratusAI Warehouse's multi-cloud capabilities\n   - Real-time analytics for retail use cases\n   - AI-driven query optimization\n   - Compliance and security features\n\n3. Provide targeted use case demonstrations specific to retail data management\n\nConfidence Level: Medium\n- Requires further qualification\n- Strong potential fit based on company profile\n- Need more detailed information about specific data needs\n\nLimitations of Current Research:\n- Enrichment and Salesforce tools did not provide additional context\n- Recommend manual follow-up to gather more detailed information\n\nThis research provides a strategic framework for approaching Target as a potential StratusAI Warehouse client, highlighting the alignment between our product capabilities and their likely data management challenges.",
+            "lead_data": {
+                "name": "Sean Falconer",
+                "email": "falconer.sean@gmail.com",
+                "company_name": "Target",
+                "company_website": "https://www.target.com",
+                "lead_source": "Demo Request",
+                "job_title": "Account Exec",
+                "project_description": "Test"
+            }
+        }
 
-        lead_details = item.get('lead_data', {}).get('lead', {})
+        lead_details = item.get('lead_data', {})
         content = item.get('content', "")
+
+        print(lead_details)
 
         asyncio.create_task(start_agent_flow(lead_details, content))
 

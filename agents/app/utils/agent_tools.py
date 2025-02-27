@@ -3,27 +3,119 @@ from langchain_anthropic import ChatAnthropic
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+import json
+import os
 import requests
 import logging
+from ..utils.constants import PRODUCT_DESCRIPTION
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-model = ChatAnthropic(model='claude-3-5-haiku-20241022', temperature=0.7)
-
 # Load environment variables from .env file
 load_dotenv()
+
+model = ChatAnthropic(model='claude-3-5-haiku-20241022', temperature=0.7, anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 def remove_empty_lines(text):
     return "\n".join([line for line in text.split("\n") if line.strip()])
 
 @tool
-def get_recent_linkedin_posts(lead_details):
+def find_relevant_content(search_query):
     """
-    Fetches and extracts recent posts by the prospect.
+    Finds and returns the five most relevant marketing assets based on the given search query.
+    
+    This is synthetically generated via an LLM API call.
+
+    This function:
+    - Constructs a prompt using the search query to generate relevant marketing assets.
+    - Uses an AI model to retrieve a structured list of content, including:
+      - Titles
+      - Descriptions
+      - URLs
+      - Asset types (e.g., case studies, blog posts, whitepapers, webinars)
+
+    Args:
+        search_query (str): The search query used to find relevant content.
+
+    Returns:
+        dict: A structured JSON response containing the top relevant marketing assets.
     """
 
-    return ""
+    logger.info(f"Finds relevant content for {search_query}")
+
+    example_output = {
+      "marketing_assets": [
+        {
+          "title": "[Title of Asset #1]",
+          "description": "[Short Description of Asset #1]",
+          "url": "[URL location of Asset #1]",
+          "type": "[Case Study or Blog Post or Whitepaper or Webinar of Asset #1]",
+        },
+        {
+          "title": "[Title of Asset #2]",
+          "description": "[Short Description of Asset #2]",
+          "url": "[URL location of Asset #2]",
+          "type": "[Case Study or Blog Post or Whitepaper or Webinar of Asset #2]",
+        }
+      ]
+    }
+
+    prompt = f"""
+      Take the search query and generate a list of related marketing assets such as
+      case studies, blog posts, whitepapers, webinars that are related to the query.
+
+      Search query
+      {search_query}
+
+      These content should be believably created by this company:
+      {PRODUCT_DESCRIPTION}
+
+      The fake output should look like this:
+      {json.dumps(example_output)}
+    """
+
+    data = model.invoke([{ "role": "user", "content": prompt }])
+    response = data.pretty_print()
+    logger.info(response)
+
+    return response
+
+@tool
+def get_recent_linkedin_posts(lead_details):
+    """
+    Fetches and extracts recent LinkedIn posts by the prospect.
+
+    This is synthetically generated via an LLM API call.
+
+    This function:
+    - Uses AI to generate plausible LinkedIn activity for a given lead.
+    - Creates a prompt based on the lead's details to infer recent LinkedIn discussions.
+    - Simulates posts that align with the lead's industry, interests, and engagement history.
+
+    Args:
+        lead_details (str): Information about the lead (e.g., name, job title, company).
+
+    Returns:
+        str: AI-generated LinkedIn activity representing the lead's recent posts.
+    """
+
+    logger.info(f"Gets recent LinkedIn posts by the lead {lead_details}")
+
+    prompt = f"""
+      Using the lead details, create some fake data that represents what the
+      lead has recently been talking about on LinkedIn. Keep this short. This
+      is to inform the email campaign to the lead.
+
+      Lead details:
+      {lead_details}
+    """
+
+    data = model.invoke([{ "role": "user", "content": prompt }])
+    response = data.pretty_print()
+    logger.info(response)
+
+    return response
 
 @tool
 def get_company_website_information(company_website_url):
@@ -104,14 +196,22 @@ def get_salesforce_data(lead_details):
       Take the lead details and generate realistic Salesforce data to represent the contact,
       company, lead information, and any historical interactions we've had with the lead.
 
+      Take into account the product details when generating the history. If there's not a good
+      match between the lead and product, reflect that in the Salesforce data.
+
+      It's also ok to return no information to simulate that there's no history with this lead.
+
       Return only the fake Salesforce data as JSON. Do not wrap the message in any additional text.
 
       Lead details:
       {lead_details}
+
+      Product details:
+      {PRODUCT_DESCRIPTION}
     """
 
-    response = model.invoke([{ "role": "user", "content": prompt }])
-
+    data = model.invoke([{ "role": "user", "content": prompt }])
+    response = data.pretty_print()
     logger.info(response)
 
     return response
@@ -236,8 +336,8 @@ def get_enriched_lead_data(lead_details):
       {clearbit_sample_as_string}
     """
 
-    response = model.invoke([{ "role": "user", "content": prompt }])
-
+    data = model.invoke([{ "role": "user", "content": prompt }])
+    response = data.pretty_print()
     logger.info(response)
 
     return response
