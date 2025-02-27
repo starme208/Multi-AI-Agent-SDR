@@ -1,9 +1,8 @@
-# Meal Planner AI Web Application
+# Lead Capture Web Application
 
-This project is the consumer-facing web application for creating meal plans.
+This project is the user-facing web application for capturing a lead.
 
-Configure your settings and then request meal plans. This application
-saves that data to MongoDB. Behind the scenes, Kafka kick starts the agentic process, generating a series of meal plans, eventually saving a structured response to MongoDB. 
+This application saves that data to MongoDB. Behind the scenes, Kafka kick starts the agentic process, eventually generating and email engagement plan.
 
 Refer to the main `README.md` for detailed instructions in how to setup and configure this application.
 
