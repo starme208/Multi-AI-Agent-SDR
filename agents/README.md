@@ -4,8 +4,8 @@ This folder contains a Python app that supports given API endpoints.
 
 * `/api/lead-ingestion-agent`: A ReAct agent enriches lead data and assigns a lead score.
 * `/api/lead-routing-agent`: A ReAct agent that determines the next step based on lead quality.
-* `/api/active-outreach-agent`: A reflection agent that that creates a personalized outreach email.
-* `/api/nurture-campaign-agent`: A reflection agent that creates a personalized sequence of emails.
+* `/api/active-outreach-agent`: A ReAct agent that that creates a personalized outreach email.
+* `/api/nurture-campaign-agent`: A ReAct agent that creates a personalized sequence of emails.
 
 Refer to the main README.md for detailed instructions in how to setup and configure this application.
 
