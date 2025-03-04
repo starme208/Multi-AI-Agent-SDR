@@ -1,4 +1,4 @@
-# Meal Planner Multi-Agent and HTTP Sink APIs
+# AI SDR Multi-Agent and HTTP Sink APIs
 
 This folder contains a Python app that supports given API endpoints. 
 
