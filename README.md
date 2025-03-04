@@ -110,8 +110,8 @@ Now that data is flowing from the application database into the `incoming-leadds
 * Search for "http" and select the **HTTP Sink** connector
 * Select the **incoming-leadds.stratusdb.leads** topic
 * In **Kafka credentials**, select **Service account** and use you existing service account and click **Continue**
-* Enter the URL for where the `active-outreach-agent` endpoint is running under the `agents` folder. This will be
-similar to `https://YOUR-PUBLIC-DOMAIN/api/active-outreach-agent`. If running locally, you can use [ngrok](https://ngrok.com/)
+* Enter the URL for where the `lead-ingestion-agent` endpoint is running under the `agents` folder. This will be
+similar to `https://YOUR-PUBLIC-DOMAIN/api/lead-ingestion-agent`. If running locally, you can use [ngrok](https://ngrok.com/)
 to create a publicly accessible URL. Click **Continue**
 * Under **Configuration**, select **JSON** and click **Continue**
 * For **Sizing**, leave the defaults and click **Continue**
